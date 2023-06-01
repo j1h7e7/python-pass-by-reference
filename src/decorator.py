@@ -4,6 +4,9 @@ import ctypes
 import dis
 from types import FrameType, CodeType
 import textwrap
+import re
+
+DECORATOR_NAME_REGEX = re.compile(r"@([^\d\W]\w*)(\s.*)?\n")
 
 
 def get_name_and_space(
@@ -69,7 +72,10 @@ def get_args_and_fixed_func(
 
 
 def pass_by_reference(f):
-    thisname = inspect.currentframe().f_code.co_name
+    current_frame = inspect.currentframe()
+    code_context = inspect.getframeinfo(current_frame.f_back).code_context[0]
+
+    thisname = re.match(DECORATOR_NAME_REGEX, code_context).group(1)
     code = ast.parse(textwrap.dedent(inspect.getsource(f)))
     argnames, compiled = get_args_and_fixed_func(code, thisname)
 
