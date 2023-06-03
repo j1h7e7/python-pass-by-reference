@@ -44,12 +44,12 @@ def get_name_and_space(
 
 
 def get_args_and_fixed_func(
-    code: ast.Module, fn_name: str
+    code: ast.Module, fn_names: list[str]
 ) -> tuple[list[str], CodeType]:
     body = code.body[0]
 
     # remove this decorator
-    body.decorator_list = [x for x in body.decorator_list if x.id != fn_name]
+    body.decorator_list = [x for x in body.decorator_list if x.id not in fn_names]
     # change function signature
     argnames = []
     for arg in body.args.args:
@@ -73,11 +73,12 @@ def get_args_and_fixed_func(
 
 def pass_by_reference(f):
     current_frame = inspect.currentframe()
-    code_context = inspect.getframeinfo(current_frame.f_back).code_context[0]
+    prev_frame = current_frame.f_back
+    prev_frame_variables = prev_frame.f_globals | prev_frame.f_locals
 
-    thisname = re.match(DECORATOR_NAME_REGEX, code_context).group(1)
+    thisnames = [k for k, v in prev_frame_variables.items() if v is pass_by_reference]
     code = ast.parse(textwrap.dedent(inspect.getsource(f)))
-    argnames, compiled = get_args_and_fixed_func(code, thisname)
+    argnames, compiled = get_args_and_fixed_func(code, thisnames)
 
     ns0 = {arg: None for arg in argnames}
     ns1 = {}

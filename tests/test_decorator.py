@@ -1,8 +1,8 @@
-from src.decorator import pass_by_reference as decorator
+from src.decorator import pass_by_reference
 import pytest
 
 
-@decorator
+@pass_by_reference
 def add_one(x):
     x += 1
 
@@ -53,3 +53,53 @@ def test_nonlocal():
 
     thing()
     assert x == 2
+
+
+def test_no_renamed_decorator():
+    from src.decorator import pass_by_reference
+
+    @pass_by_reference
+    def add_one(x):
+        x += 1
+
+    y = 1000000
+    add_one(y)
+    assert y == 1000001
+
+
+def test_renamed_decorator():
+    from src.decorator import pass_by_reference as new_name
+
+    @new_name
+    def add_one(x):
+        x += 1
+
+    y = 1000000
+    add_one(y)
+    assert y == 1000001
+
+
+def test_multi_name_decorator():
+    from src.decorator import pass_by_reference
+
+    new_name = pass_by_reference
+
+    @new_name
+    def add_one(x):
+        x += 1
+
+    y = 1000000
+    add_one(y)
+    assert y == 1000001
+
+
+def test_existing_decorator():
+    def my_decorator(f):
+        return lambda: 1
+
+    @my_decorator
+    @pass_by_reference
+    def test_fn():
+        return 0
+
+    assert test_fn() == 1
