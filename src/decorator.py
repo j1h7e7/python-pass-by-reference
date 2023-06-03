@@ -56,7 +56,8 @@ def get_args_and_fixed_func(
         argnames.append(arg.arg)
         arg.arg = "_" + arg.arg
     # add new global
-    body.body.insert(0, ast.Global(argnames))
+    if argnames:
+        body.body.insert(0, ast.Global(argnames))
     # add assignment
     for arg in argnames:
         body.body.insert(
@@ -80,7 +81,7 @@ def pass_by_reference(f):
     code = ast.parse(textwrap.dedent(inspect.getsource(f)))
     argnames, compiled = get_args_and_fixed_func(code, thisnames)
 
-    ns0 = {arg: None for arg in argnames}
+    ns0 = prev_frame_variables | {arg: None for arg in argnames}
     ns1 = {}
     exec(compiled, ns0, ns1)
     f_name, f = ns1.popitem()

@@ -103,3 +103,11 @@ def test_existing_decorator():
         return 0
 
     assert test_fn() == 1
+
+
+def test_no_var_function():
+    @pass_by_reference
+    def my_func():
+        return 1
+
+    assert my_func() == 1
