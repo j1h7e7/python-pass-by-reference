@@ -69,7 +69,7 @@ def get_args_and_fixed_func(
         )
     ast.fix_missing_locations(code)
 
-    return argnames, compile(code, "", "exec")
+    return argnames, compile(code, "<pass_by_reference>", "exec")
 
 
 def pass_by_reference(f):
@@ -81,10 +81,10 @@ def pass_by_reference(f):
     code = ast.parse(textwrap.dedent(inspect.getsource(f)))
     argnames, compiled = get_args_and_fixed_func(code, thisnames)
 
-    ns0 = prev_frame_variables | {arg: None for arg in argnames}
-    ns1 = {}
-    exec(compiled, ns0, ns1)
-    f_name, f = ns1.popitem()
+    ns_globals = prev_frame.f_globals | {arg: None for arg in argnames}
+    ns_locals = prev_frame.f_locals.copy()
+    exec(compiled, ns_globals, ns_locals)
+    f_name, f = ns_locals.popitem()  # probably not good
 
     def func(*args, **kwargs):
         output = f(*args, **kwargs)
@@ -93,7 +93,7 @@ def pass_by_reference(f):
         for i, (val, argname) in enumerate(zip(args, argnames)):
             try:
                 name, namespace = get_name_and_space(val, frame.f_back, f_name, i)
-                namespace[name] = ns0[argname]
+                namespace[name] = ns_globals[argname]
             except AssertionError:
                 print("failed!")
 
