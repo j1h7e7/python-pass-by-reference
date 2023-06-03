@@ -114,23 +114,47 @@ def test_no_var_function():
 
 
 my_global_0 = 10
-my_global_1 = 10
 
 
-def test_complicated_scoped_function():
-    my_local_0 = 5
-    my_local_1 = 5
-
+def test_with_global_var_no_keyword():
     @pass_by_reference
     def my_func(x):
-        nonlocal my_local_1
-        global my_global_1
-
         x += my_global_0
-        x += my_local_0
-        x += my_global_1
-        x += my_local_1
 
     y = 1000000
     my_func(y)
-    assert y == 1000030
+    assert y == 1000010
+
+
+def test_with_global_var_yes_keyword():
+    @pass_by_reference
+    def my_func(x):
+        global my_global_0
+        x += my_global_0
+
+    y = 1000000
+    my_func(y)
+    assert y == 1000010
+
+def test_with_local_var_no_keyword():
+    local_var = 5
+    @pass_by_reference
+    def my_func(x):
+        x += local_var
+
+    y = 1000000
+    my_func(y)
+    assert y == 1000005
+
+
+def test_with_local_var_yes_keyword():
+    local_var = 5
+    @pass_by_reference
+    def my_func(x):
+        nonlocal local_var
+        x += local_var
+
+    y = 1000000
+    my_func(y)
+    assert y == 1000005
+
